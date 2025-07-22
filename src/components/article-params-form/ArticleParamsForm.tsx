@@ -15,35 +15,26 @@ import {
 	fontColors,
 	backgroundColors,
 	ArticleStateType,
+	defaultArticleState,
 } from 'src/constants/articleProps';
 
-interface Props {
-	isOpen: boolean;
-	onToggle: () => void;
-	initialValues: ArticleStateType;
-	onApply: (newState: ArticleStateType) => void;
-	defaultSnapshot: ArticleStateType;
-}
-
-export const ArticleParamsForm = ({
-	isOpen,
-	onToggle,
-	initialValues,
-	onApply,
-	defaultSnapshot,
-}: Props) => {
+export const ArticleParamsForm = () => {
 	const ref = useRef<HTMLDivElement>(null);
 	const formRef = useRef<HTMLFormElement>(null);
 
-	const [formState, setFormState] = useState(initialValues);
+	const [isOpen, setIsOpen] = useState(false);
+
+	const initialSnapshot = useRef(defaultArticleState);
+	const [appliedState, setAppliedState] = useState(defaultArticleState);
+	const [formState, setFormState] = useState(defaultArticleState);
 
 	const openedInitialValuesRef = useRef<ArticleStateType | null>(null);
 	const wasOpened = useRef(false);
 
 	useEffect(() => {
 		if (isOpen && !wasOpened.current) {
-			openedInitialValuesRef.current = initialValues;
-			setFormState(initialValues);
+			openedInitialValuesRef.current = appliedState;
+			setFormState(appliedState);
 			wasOpened.current = true;
 		}
 
@@ -56,7 +47,7 @@ export const ArticleParamsForm = ({
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			if (ref.current && !ref.current.contains(event.target as Node)) {
-				onToggle();
+				setIsOpen(false);
 			}
 		};
 
@@ -64,7 +55,16 @@ export const ArticleParamsForm = ({
 			document.addEventListener('mousedown', handleClickOutside);
 		}
 		return () => document.removeEventListener('mousedown', handleClickOutside);
-	}, [isOpen, onToggle]);
+	}, [isOpen]);
+
+	const applyStylesToRoot = (styles: ArticleStateType) => {
+		const root = document.documentElement;
+		root.style.setProperty('--font-family', styles.fontFamilyOption.value);
+		root.style.setProperty('--font-size', styles.fontSizeOption.value);
+		root.style.setProperty('--font-color', styles.fontColor.value);
+		root.style.setProperty('--container-width', styles.contentWidth.value);
+		root.style.setProperty('--bg-color', styles.backgroundColor.value);
+	};
 
 	const handleChange = <K extends keyof ArticleStateType>(
 		field: K,
@@ -75,18 +75,23 @@ export const ArticleParamsForm = ({
 
 	const handleReset = (e: React.FormEvent) => {
 		e.preventDefault();
-		setFormState(defaultSnapshot);
-		onApply({ ...defaultSnapshot });
+		const snapshot = initialSnapshot.current;
+		if (snapshot) {
+			setFormState(snapshot);
+			setAppliedState(snapshot);
+			applyStylesToRoot(snapshot);
+		}
 	};
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		onApply(formState);
+		setAppliedState(formState);
+		applyStylesToRoot(formState);
 	};
 
 	return (
 		<>
-			<ArrowButton isOpen={isOpen} onClick={onToggle} />
+			<ArrowButton isOpen={isOpen} onClick={() => setIsOpen((prev) => !prev)} />
 			<aside
 				className={clsx(styles.container, { [styles.container_open]: isOpen })}
 				ref={ref}>
