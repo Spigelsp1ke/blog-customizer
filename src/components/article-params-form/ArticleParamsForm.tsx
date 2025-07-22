@@ -22,7 +22,7 @@ export const ArticleParamsForm = () => {
 	const ref = useRef<HTMLDivElement>(null);
 	const formRef = useRef<HTMLFormElement>(null);
 
-	const [isOpen, setIsOpen] = useState(false);
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
 
 	const initialSnapshot = useRef(defaultArticleState);
 	const [appliedState, setAppliedState] = useState(defaultArticleState);
@@ -32,30 +32,30 @@ export const ArticleParamsForm = () => {
 	const wasOpened = useRef(false);
 
 	useEffect(() => {
-		if (isOpen && !wasOpened.current) {
+		if (isMenuOpen && !wasOpened.current) {
 			openedInitialValuesRef.current = appliedState;
 			setFormState(appliedState);
 			wasOpened.current = true;
 		}
 
-		if (!isOpen) {
+		if (!isMenuOpen) {
 			openedInitialValuesRef.current = null;
 			wasOpened.current = false;
 		}
-	}, [isOpen]);
+	}, [isMenuOpen]);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			if (ref.current && !ref.current.contains(event.target as Node)) {
-				setIsOpen(false);
+				setIsMenuOpen(false);
 			}
 		};
 
-		if (isOpen) {
+		if (isMenuOpen) {
 			document.addEventListener('mousedown', handleClickOutside);
 		}
 		return () => document.removeEventListener('mousedown', handleClickOutside);
-	}, [isOpen]);
+	}, [isMenuOpen]);
 
 	const applyStylesToRoot = (styles: ArticleStateType) => {
 		const root = document.documentElement;
@@ -91,9 +91,14 @@ export const ArticleParamsForm = () => {
 
 	return (
 		<>
-			<ArrowButton isOpen={isOpen} onClick={() => setIsOpen((prev) => !prev)} />
+			<ArrowButton
+				isOpen={isMenuOpen}
+				onClick={() => setIsMenuOpen((prev) => !prev)}
+			/>
 			<aside
-				className={clsx(styles.container, { [styles.container_open]: isOpen })}
+				className={clsx(styles.container, {
+					[styles.container_open]: isMenuOpen,
+				})}
 				ref={ref}>
 				<form
 					ref={formRef}
